@@ -68,11 +68,13 @@
     -fx-stroke-width: 2;
 }
 
-#base {
+#lbase,
+#rbase {
     -fx-fill: #434343;
 }
 
-#knob {
+#lknob,
+#rknob {
     -fx-fill: #4287f5;
     -fx-stroke: #425df5;
     -fx-stroke-width: 2;

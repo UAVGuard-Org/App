@@ -3,10 +3,10 @@ package com.uavguard.utilities;
 public class Packet {
 
     private byte[] parameters = {
-        (byte) 0x80,
-        (byte) 0x80,
-        (byte) 0x80,
-        (byte) 0x80,
+        (byte) 0x80, //l/r
+        (byte) 0x80, //f/b
+        (byte) 0x80, //u/d
+        (byte) 0x80, //raw
     };
 
     private byte[] packet = {

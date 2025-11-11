@@ -31,8 +31,14 @@
     <HBox fx:id="control" alignment="CENTER" GridPane.rowIndex="2" spacing="100">
         <Pane fx:id="joystick">
             <Circle fx:id="stroke" layoutX="100" layoutY="100" radius="130"/>
-            <Circle fx:id="base" layoutX="100" layoutY="100" radius="100"/>
-            <Circle fx:id="knob" layoutX="100" layoutY="100" onMouseReleased="#onMouseReleased" onMouseDragged="#onMouseDragged" radius="30"/>
+            <Circle fx:id="lbase" layoutX="100" layoutY="100" radius="100"/>
+            <Circle fx:id="lknob" layoutX="100" layoutY="100" onMouseReleased="#onMouseReleased" onMouseDragged="#LeftOnMouseDragged" radius="30"/>
+        </Pane>
+
+        <Pane fx:id="joystick">
+            <Circle fx:id="stroke" layoutX="100" layoutY="100" radius="130"/>
+            <Circle fx:id="rbase" layoutX="100" layoutY="100" radius="100"/>
+            <Circle fx:id="rknob" layoutX="100" layoutY="100" onMouseReleased="#onMouseReleased" onMouseDragged="#RightOnMouseDragged" radius="30"/>
         </Pane>
     </HBox>
 
