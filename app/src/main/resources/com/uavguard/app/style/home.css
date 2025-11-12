@@ -1,0 +1,68 @@
+#screen {
+    -fx-padding: 20;
+}
+
+#stream {
+    -fx-border-color: #171717;
+    -fx-border-width: 2;
+    -fx-border-style: dotted;
+    -fx-border-radius: 5;
+}
+
+#stream > Label {
+    -fx-font-size: 14;
+    -fx-text-fill: #f7f7f7;
+}
+
+#control {
+    -fx-spacing: 200;
+}
+
+#commands {
+    -fx-spacing: 20;
+}
+
+#commands > * {
+    -fx-border-radius: 3;
+    -fx-min-width: 130;
+    -fx-min-height: 40;
+    -fx-border-width: 1;
+    -fx-border-color: #262626;
+    -fx-text-fill: #f7f7f7;
+    -fx-background-color: linear-gradient(to bottom, #353535, #333333);
+}
+
+.select {
+    -fx-min-width: 300;
+    -fx-background-color: linear-gradient(to bottom, #353535, #2b2b2b);
+    -fx-text-fill: #f7f7f7;
+    -fx-border-color: #434343;
+    -fx-border-radius: 3;
+}
+
+#joystick {
+    -fx-pref-width: 200;
+    -fx-pref-hieght: 200;
+    -fx-min-width: 200;
+    -fx-min-height: 200;
+    -fx-max-width: 200;
+    -fx-max-height: 200;
+}
+
+#stroke {
+    -fx-fill: #434343;
+    -fx-stroke: darkgray;
+    -fx-stroke-width: 2;
+}
+
+#lbase,
+#rbase {
+    -fx-fill: #434343;
+}
+
+#lknob,
+#rknob {
+    -fx-fill: #4287f5;
+    -fx-stroke: #425df5;
+    -fx-stroke-width: 2;
+}

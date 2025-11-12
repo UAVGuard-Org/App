@@ -10,12 +10,9 @@ public class App extends javafx.application.Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
-            App.class.getResource("view/main.fxml")
+            App.class.getResource("view/main.xml")
         );
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
-        scene
-            .getStylesheets()
-            .add(App.class.getResource("style/main.css").toExternalForm());
         stage.setTitle("AUVGuard");
         stage.setScene(scene);
         stage.show();
