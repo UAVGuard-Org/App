@@ -34,11 +34,11 @@ public class Controller {
     public void initialize() {
         try {
             manager.load(
-                "/home/hasbulla/Documents/UAVGuard Plugins/wrj12620/target/"
+                "/home/hasbulla/Documents/UAVGuard Plugins/e88pro/target/"
             );
 
             for (Plugin p : manager.plugins) {
-                if (p.getName().equals("wrj12620")) {
+                if (p.getName().equals("e88pro")) {
                     this.plugin = p;
                     break;
                 }
@@ -100,6 +100,11 @@ public class Controller {
 
         try {
             sendPacket(plugin.getPacket());
+
+            for (byte b : plugin.getPacket()) {
+                System.out.printf("%02X", b);
+            }
+            System.out.println();
         } catch (Exception err) {
             err.printStackTrace();
         }
@@ -107,8 +112,13 @@ public class Controller {
 
     public void sendPacket(byte[] data) throws Exception {
         DatagramSocket socket = new DatagramSocket();
-        InetAddress addr = InetAddress.getByName("192.168.4.153");
-        DatagramPacket pkt = new DatagramPacket(data, data.length, addr, 8090);
+        InetAddress addr = InetAddress.getByName("192.168.1.1");
+        DatagramPacket pkt = new DatagramPacket(
+            data,
+            data.length,
+            addr,
+            plugin.getPort()
+        );
         socket.send(pkt);
         socket.close();
     }

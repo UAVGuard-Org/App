@@ -24,7 +24,7 @@ public class Manager {
             var mainClassName = new java.util.jar.JarFile(file)
                 .getManifest()
                 .getMainAttributes()
-                .getValue("mainClass");
+                .getValue("Main-Class");
 
             Plugin plugin = (Plugin) Class.forName(mainClassName, true, loader)
                 .getDeclaredConstructor()
