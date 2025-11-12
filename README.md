@@ -21,9 +21,10 @@ Since the Unmanned Aerial Vehicle (UAV) is configured to accept only one control
 
 ### Currently supported models
 
-| Model | Link |
+| Model | Link | Last Plugin Version |
 | ------------- | ------------- |
-| INOVA WRJ-12620        | https://inovaoficial.com.br/produtos/drone-edicao-2-4ghz-aeronave-desmontavel-wrj-12620-inova/        |
+| INOVA WRJ-12620 | https://inovaoficial.com.br/produtos/drone-edicao-2-4ghz-aeronave-desmontavel-wrj-12620-inova/ | 1.0.0 |
+| IIGENAI E88 Pro | https://iigenaieletronicos.com.br/produtos/mini-drone-e88-pro-com-camera-dupla-wifi-2-baterias/ | 1.0.0 |
 
 ### Build & Run
 

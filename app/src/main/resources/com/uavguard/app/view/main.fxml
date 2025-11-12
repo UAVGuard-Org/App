@@ -28,7 +28,7 @@
         </HBox>
     </HBox>
 
-    <HBox fx:id="control" alignment="CENTER" GridPane.rowIndex="2" spacing="100">
+    <HBox fx:id="control" alignment="CENTER" GridPane.rowIndex="2">
         <Pane fx:id="joystick">
             <Circle fx:id="stroke" layoutX="100" layoutY="100" radius="130"/>
             <Circle fx:id="lbase" layoutX="100" layoutY="100" radius="100"/>

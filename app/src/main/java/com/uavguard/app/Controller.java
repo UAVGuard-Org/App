@@ -1,6 +1,8 @@
 package com.uavguard.app;
 
-import com.uavguard.utilities.Packet;
+import com.uavguard.plugin.Action;
+import com.uavguard.plugin.Plugin;
+import com.uavguard.utilities.Manager;
 import java.net.*;
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseEvent;
@@ -8,7 +10,8 @@ import javafx.scene.shape.Circle;
 
 public class Controller {
 
-    private Packet pkt = new Packet();
+    private Manager manager = new Manager();
+    private Plugin plugin;
 
     @FXML
     private Circle lbase;
@@ -22,15 +25,30 @@ public class Controller {
     @FXML
     private Circle rknob;
 
-    private final double centerX = 100; // centro desejado na PANE
+    private final double centerX = 100;
     private final double centerY = 100;
     private double lradius;
     private double rradius;
 
     @FXML
     public void initialize() {
+        try {
+            manager.load(
+                "/home/hasbulla/Documents/UAVGuard Plugins/wrj12620/target/"
+            );
+
+            for (Plugin p : manager.plugins) {
+                if (p.getName().equals("wrj12620")) {
+                    this.plugin = p;
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         rradius = rbase.getRadius();
-        lradius = rbase.getRadius();
+        lradius = lbase.getRadius();
     }
 
     @FXML
@@ -50,12 +68,14 @@ public class Controller {
         rknob.setLayoutX(centerX + dx);
         rknob.setLayoutY(centerY + dy);
 
-        pkt.setParameter(0, (int) dx);
-        pkt.setParameter(1, -(int) dy);
+        plugin.setParameter(Action.ROLL, (int) dx);
+        plugin.setParameter(Action.PITCH, -(int) dy);
 
         try {
-            sendPacket(pkt.getPacket());
-        } catch (Exception err) {}
+            sendPacket(plugin.getPacket());
+        } catch (Exception err) {
+            err.printStackTrace();
+        }
     }
 
     @FXML
@@ -75,12 +95,14 @@ public class Controller {
         lknob.setLayoutX(centerX + dx);
         lknob.setLayoutY(centerY + dy);
 
-        pkt.setParameter(2, -(int) dy);
-        pkt.setParameter(3, (int) dx);
+        plugin.setParameter(Action.YAW, (int) dx);
+        plugin.setParameter(Action.THROTTLE, -(int) dy);
 
         try {
-            sendPacket(pkt.getPacket());
-        } catch (Exception err) {}
+            sendPacket(plugin.getPacket());
+        } catch (Exception err) {
+            err.printStackTrace();
+        }
     }
 
     public void sendPacket(byte[] data) throws Exception {
@@ -88,6 +110,7 @@ public class Controller {
         InetAddress addr = InetAddress.getByName("192.168.4.153");
         DatagramPacket pkt = new DatagramPacket(data, data.length, addr, 8090);
         socket.send(pkt);
+        socket.close();
     }
 
     @FXML
@@ -97,9 +120,16 @@ public class Controller {
         lknob.setLayoutX(centerX);
         lknob.setLayoutY(centerY);
 
-        pkt.setParameter(0, 0);
-        pkt.setParameter(1, 0);
-        pkt.setParameter(2, 0);
-        pkt.setParameter(3, 0);
+        // resetar todos os eixos
+        plugin.setParameter(Action.THROTTLE, 0);
+        plugin.setParameter(Action.YAW, 0);
+        plugin.setParameter(Action.PITCH, 0);
+        plugin.setParameter(Action.ROLL, 0);
+
+        try {
+            sendPacket(plugin.getPacket());
+        } catch (Exception err) {
+            err.printStackTrace();
+        }
     }
 }
