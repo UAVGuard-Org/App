@@ -1,4 +1,9 @@
+#plugins {
+    -fx-padding: 20;
+}
+
 #search {
+    -fx-spacing: 20;
 }
 
 #search > Button {
@@ -7,10 +12,10 @@
     -fx-min-height: 40;
     -fx-border-width: 1;
     -fx-border-color: #262626;
-    -fx-border-width: 1 1 1 1;
-    -fx-border-radius: 0 3 3 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
     -fx-text-fill: #f7f7f7;
-    -fx-background-color: linear-gradient(to bottom, #353535, #323232);
+    -fx-background-color: linear-gradient(to bottom, #353535, #333333);
 }
 
 #search > TextField {
@@ -19,20 +24,22 @@
     -fx-min-height: 40;
     -fx-border-width: 1;
     -fx-border-color: #262626;
-    -fx-border-width: 1 0 1 1;
-    -fx-border-radius: 3 0 0 3;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
     -fx-text-fill: #f7f7f7;
-    -fx-background-color: linear-gradient(to bottom, #353535, #323232);
+    -fx-background-color: linear-gradient(to bottom, #353535, #333333);
 }
 
-#result {
-    -fx-background-color: #353535;
+#list {
     -fx-border-color: #151515;
     -fx-border-radius: 3;
 }
 
+#result {
+    -fx-background-color: #353535;
+}
+
 ScrollPane {
-    -fx-padding: 20;
     -fx-background-color: transparent;
 }
 

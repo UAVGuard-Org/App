@@ -5,6 +5,8 @@ import com.uavguard.plugin.Command;
 import com.uavguard.plugin.Plugin;
 import com.uavguard.utilities.Manager;
 import com.uavguard.utilities.Socket;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.MouseEvent;
@@ -15,6 +17,9 @@ public class Home {
     private Manager manager = new Manager();
     private Plugin plugin;
     private Command command;
+    private String ip;
+    private volatile int lx, ly, rx, ry;
+    private volatile boolean running = true;
 
     @FXML
     private Circle lbase;
@@ -41,6 +46,7 @@ public class Home {
 
     @FXML
     public void initialize() {
+        setIp();
         try {
             manager.load("/home/hasbulla/Documents/UAVGuard/plugins");
             plugin = manager.plugins.get(0);
@@ -58,6 +64,27 @@ public class Home {
 
         rradius = rbase.getRadius();
         lradius = lbase.getRadius();
+
+        new Thread(() -> {
+            while (running) {
+                try {
+                    byte[] pkt = plugin.getPacket();
+                    Socket.sendPacket(pkt, ip, plugin.getPort());
+                    Thread.sleep(50);
+                } catch (Exception err) {
+                    err.printStackTrace();
+                }
+            }
+        })
+            .start();
+
+        lbase
+            .sceneProperty()
+            .addListener((obs, oldScene, newScene) -> {
+                if (oldScene != null && newScene == null) {
+                    running = false;
+                }
+            });
     }
 
     @FXML
@@ -79,15 +106,6 @@ public class Home {
 
         plugin.setParameter(Action.ROLL, (int) dx);
         plugin.setParameter(Action.PITCH, -(int) dy);
-
-        try {
-            byte[] pkt = plugin.getPacket();
-            Socket.sendPacket(pkt, plugin.getPort());
-
-            printBytes(pkt);
-        } catch (Exception err) {
-            err.printStackTrace();
-        }
     }
 
     @FXML
@@ -109,15 +127,6 @@ public class Home {
 
         plugin.setParameter(Action.YAW, (int) dx);
         plugin.setParameter(Action.THROTTLE, -(int) dy);
-
-        try {
-            byte[] pkt = plugin.getPacket();
-            Socket.sendPacket(pkt, plugin.getPort());
-
-            printBytes(pkt);
-        } catch (Exception err) {
-            err.printStackTrace();
-        }
     }
 
     @FXML
@@ -134,7 +143,7 @@ public class Home {
         plugin.setParameter(Action.ROLL, 0);
 
         try {
-            Socket.sendPacket(plugin.getPacket(), plugin.getPort());
+            Socket.sendPacket(plugin.getPacket(), ip, plugin.getPort());
         } catch (Exception err) {
             err.printStackTrace();
         }
@@ -142,6 +151,8 @@ public class Home {
 
     @FXML
     public void onModelSelect() {
+        setIp();
+
         String selected = modelSelect.getValue();
         for (Plugin p : manager.plugins) {
             if (p.getName() == selected) {
@@ -170,18 +181,22 @@ public class Home {
     public void onSendCommand() {
         try {
             byte[] pkt = command.getPacket();
-            Socket.sendPacket(pkt, plugin.getPort());
-
-            printBytes(pkt);
+            Socket.sendPacket(pkt, ip, plugin.getPort());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void printBytes(byte[] data) {
-        for (byte b : data) {
-            System.out.printf("%02X", b);
-        }
-        System.out.println();
+    public void setIp() {
+        try {
+            Process process = Runtime.getRuntime().exec(
+                new String[] { "bash", "-c", "ip route show default " }
+            );
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream())
+            );
+
+            ip = reader.readLine().trim().split("\\s+")[2];
+        } catch (Exception e) {}
     }
 }

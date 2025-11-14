@@ -9,7 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ScrollPane?>
 <GridPane
-    fx:id="home"
+    fx:id="plugins"
     xmlns:fx="http://javafx.com/fxml"
     HBox.hgrow="ALWAYS"
     fx:controller="com.uavguard.app.Plugins"
@@ -23,59 +23,69 @@
         <ColumnConstraints hgrow="ALWAYS" />
     </columnConstraints>
 
+    <!-- Barra de pesquisa -->
     <HBox fx:id="search" alignment="CENTER" GridPane.rowIndex="0">
-        <TextField fx:id="input" promptText="Search for drone models..." />
-        <Button>
+        <TextField fx:id="input" promptText="Search for UAV models..." />
+        <Button onAction="#onSearch">
             <graphic>
                  <fx:include source="../icons/search.xml" />
             </graphic>
         </Button>
+        <Button onAction="#onReload">
+            <graphic>
+                 <fx:include source="../icons/reload.xml" />
+            </graphic>
+        </Button>
     </HBox>
 
-    <ScrollPane GridPane.rowIndex="1" fitToWidth="true" fitToHeight="true">
+    <VBox GridPane.rowIndex="1" fx:id="list">
+        <GridPane fx:id="lheader">
+            <rowConstraints>
+                <RowConstraints vgrow="ALWAYS" />
+            </rowConstraints>
+            <columnConstraints>
+                <ColumnConstraints percentWidth="25" />
+                <ColumnConstraints percentWidth="25" />
+                <ColumnConstraints percentWidth="25" />
+                <ColumnConstraints percentWidth="25" />
+            </columnConstraints>
+
+            <HBox
+                GridPane.columnIndex="0"
+                alignment="CENTER"
+                HBox.hgrow="ALWAYS"
+            >
+                <Label text="Model" />
+            </HBox>
+            <HBox
+                GridPane.columnIndex="1"
+                alignment="CENTER"
+                HBox.hgrow="ALWAYS"
+            >
+                <Label text="Version" />
+            </HBox>
+            <HBox
+                GridPane.columnIndex="2"
+                alignment="CENTER"
+                HBox.hgrow="ALWAYS"
+            >
+                <Label text="Status" />
+            </HBox>
+            <HBox
+                GridPane.columnIndex="3"
+                alignment="CENTER"
+                HBox.hgrow="ALWAYS"
+            >
+                <Label text="Install/Update/Uninstall" />
+            </HBox>
+        </GridPane>
+
+        <ScrollPane fitToWidth="true" fitToHeight="true">
             <content>
                 <VBox fx:id="result">
-                    <GridPane fx:id="lheader">
-                        <rowConstraints>
-                            <RowConstraints vgrow="ALWAYS" />
-                        </rowConstraints>
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="25" />
-                            <ColumnConstraints percentWidth="25" />
-                            <ColumnConstraints percentWidth="25" />
-                            <ColumnConstraints percentWidth="25" />
-                        </columnConstraints>
 
-                        <HBox
-                        GridPane.columnIndex="0"
-                        alignment="CENTER"
-                        HBox.hgrow="ALWAYS"
-                    >
-                            <Label text="Model" />
-                        </HBox>
-                        <HBox
-                        GridPane.columnIndex="1"
-                        alignment="CENTER"
-                        HBox.hgrow="ALWAYS"
-                    >
-                            <Label text="Version" />
-                        </HBox>
-                        <HBox
-                        GridPane.columnIndex="2"
-                        alignment="CENTER"
-                        HBox.hgrow="ALWAYS"
-                    >
-                            <Label text="Status" />
-                        </HBox>
-                        <HBox
-                        GridPane.columnIndex="3"
-                        alignment="CENTER"
-                        HBox.hgrow="ALWAYS"
-                    >
-                            <Label text="Install/Update/Uninstall" />
-                        </HBox>
-                    </GridPane>
                 </VBox>
             </content>
         </ScrollPane>
+    </VBox>
 </GridPane>
