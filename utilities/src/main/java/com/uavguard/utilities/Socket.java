@@ -1,15 +1,12 @@
 package com.uavguard.utilities;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.*;
-import java.util.function.Consumer;
 
 public class Socket {
 
-    private boolean running = false;
-
     public void sendPacket(byte[] data, String ip, int port) throws Exception {
-        String os = System.getProperty("os.name").toLowerCase();
-
         DatagramSocket socket = new DatagramSocket();
         InetAddress addr = InetAddress.getByName(ip);
         DatagramPacket pkt = new DatagramPacket(data, data.length, addr, port);
@@ -23,37 +20,14 @@ public class Socket {
         socket.close();
     }
 
-    public void startServer(
-        int port,
-        String ip,
-        byte[] startBytes,
-        Consumer<byte[]> callback
-    ) throws Exception {
-        running = true;
-        DatagramSocket socket = new DatagramSocket(port);
-        byte[] buf = new byte[1024];
-
-        DatagramPacket out = new DatagramPacket(
-            startBytes,
-            startBytes.length,
-            InetAddress.getByName(ip),
-            port
+    public static String getGatewayAddress() throws Exception {
+        Process process = Runtime.getRuntime().exec(
+            new String[] { "bash", "-c", "ip route show default " }
         );
-        socket.send(out);
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(process.getInputStream())
+        );
 
-        while (running) {
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-            socket.receive(packet);
-
-            byte[] data = new byte[packet.getLength()];
-            System.arraycopy(buf, 0, data, 0, packet.getLength());
-            callback.accept(data);
-        }
-
-        socket.close();
-    }
-
-    public void stopServer() {
-        running = false;
+        return reader.readLine().trim().split("\\s+")[2];
     }
 }

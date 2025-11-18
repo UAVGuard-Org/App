@@ -1,0 +1,24 @@
+<GridPane fx:id="item">
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS" />
+    </rowConstraints>
+    <columnConstraints>
+        <ColumnConstraints percentWidth="25" />
+        <ColumnConstraints percentWidth="25" />
+        <ColumnConstraints percentWidth="25" />
+        <ColumnConstraints percentWidth="25" />
+    </columnConstraints>
+
+    <HBox GridPane.columnIndex="0" alignment="CENTER" HBox.hgrow="ALWAYS">
+        <Label text="Model" />
+    </HBox>
+    <HBox GridPane.columnIndex="1" alignment="CENTER" HBox.hgrow="ALWAYS">
+        <Label text="Version" />
+    </HBox>
+    <HBox GridPane.columnIndex="2" alignment="CENTER" HBox.hgrow="ALWAYS">
+        <Label text="Status" />
+    </HBox>
+    <HBox GridPane.columnIndex="3" alignment="CENTER" HBox.hgrow="ALWAYS">
+        <Label text="Install/Update/Uninstall" />
+    </HBox>
+</GridPane>

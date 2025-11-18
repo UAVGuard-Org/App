@@ -6,7 +6,7 @@ public class Item {
     public String version;
     public boolean installed;
 
-    public Item() {} // necessário para Gson
+    public Item() {}
 
     public Item(String model, String version, boolean installed) {
         this.model = model;

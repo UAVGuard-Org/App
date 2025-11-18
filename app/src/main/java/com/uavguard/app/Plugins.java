@@ -8,11 +8,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -38,16 +37,20 @@ public class Plugins {
     @FXML
     private void onSearch() {
         result.getChildren().clear();
-
         try {
             List<Item> items = Request();
-
             for (Item itemData : items) {
-                if (itemData.model.contains(input.getText())) {
+                if (
+                    itemData.model
+                        .toLowerCase()
+                        .contains(input.getText().toLowerCase())
+                ) {
                     result.getChildren().add(createItem(itemData));
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private List<Item> Request() throws Exception {
@@ -56,11 +59,12 @@ public class Plugins {
         );
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("Accept", "application/json");
 
         InputStreamReader reader = new InputStreamReader(conn.getInputStream());
         Type listType = new TypeToken<List<Item>>() {}.getType();
+
         List<Item> items = new Gson().fromJson(reader, listType);
+
         reader.close();
         conn.disconnect();
         return items;
@@ -68,87 +72,61 @@ public class Plugins {
 
     private void loadItems() {
         result.getChildren().clear();
-
         try {
             List<Item> items = Request();
-
             for (Item itemData : items) {
                 result.getChildren().add(createItem(itemData));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private GridPane createItem(Item itemData) {
-        GridPane itemGrid = new GridPane();
-        itemGrid.setId("item");
-
-        for (int i = 0; i < 4; i++) {
-            ColumnConstraints col = new ColumnConstraints();
-            col.setPercentWidth(25);
-            itemGrid.getColumnConstraints().add(col);
-        }
-
-        Label nameLabel = new Label(itemData.model);
-
-        HBox nameBox = new HBox(nameLabel);
-        nameBox.setAlignment(Pos.CENTER);
-        HBox.setHgrow(nameLabel, javafx.scene.layout.Priority.ALWAYS);
-
-        itemGrid.add(nameBox, 0, 0);
-
-        Label versionLabel = new Label(itemData.version);
-
-        HBox versionBox = new HBox(versionLabel);
-        versionBox.setAlignment(Pos.CENTER);
-        HBox.setHgrow(versionLabel, javafx.scene.layout.Priority.ALWAYS);
-
-        itemGrid.add(versionBox, 1, 0);
-
-        Label statusLabel = new Label(
-            itemData.installed ? "Installed" : "Not installed"
+    private GridPane createItem(Item itemData) throws Exception {
+        GridPane item = FXMLLoader.load(
+            getClass().getResource("view/item.xml")
         );
 
-        HBox statusBox = new HBox(statusLabel);
-        statusBox.setAlignment(Pos.CENTER);
-        HBox.setHgrow(statusLabel, javafx.scene.layout.Priority.ALWAYS);
+        HBox rowModel = (HBox) item.getChildren().get(0);
+        Label modelLabel = (Label) rowModel.getChildren().get(0);
+        modelLabel.setText(itemData.model);
 
-        itemGrid.add(statusBox, 2, 0);
+        // version label
+        HBox rowVersion = (HBox) item.getChildren().get(1);
+        Label versionLabel = (Label) rowVersion.getChildren().get(0);
+        versionLabel.setText(itemData.version);
 
-        Button btn = new Button();
+        // status label
+        HBox rowStatus = (HBox) item.getChildren().get(2);
+        Label statusLabel = (Label) rowStatus.getChildren().get(0);
+        statusLabel.setText(itemData.installed ? "Installed" : "Not installed");
+
+        // button
+        HBox rowButton = (HBox) item.getChildren().get(3);
+        Button btn = (Button) rowButton.getChildren().get(0);
+
         setButtonGraphic(btn, itemData.installed);
 
-        btn.setOnAction(e ->
-            toggleInstall(itemData, btn, statusLabel, statusBox)
-        );
+        btn.setOnAction(e -> {
+            toggleInstall(itemData, btn, statusLabel);
+        });
 
-        HBox buttonBox = new HBox(btn);
-        buttonBox.setAlignment(Pos.CENTER);
-        HBox.setHgrow(btn, javafx.scene.layout.Priority.ALWAYS);
-
-        itemGrid.add(buttonBox, 3, 0);
-
-        return itemGrid;
+        return item;
     }
 
     private void setButtonGraphic(Button btn, boolean installed) {
         try {
             String path = installed ? "icons/remove.xml" : "icons/install.xml";
-            javafx.scene.Node graphic = javafx.fxml.FXMLLoader.load(
+            javafx.scene.Node graphic = FXMLLoader.load(
                 getClass().getResource(path)
             );
             btn.setGraphic(graphic);
         } catch (Exception e) {
-            e.printStackTrace();
             btn.setText(installed ? "Remove" : "Install");
         }
     }
 
-    private void toggleInstall(
-        Item item,
-        Button btn,
-        Label statusLabel,
-        HBox statusBox
-    ) {
+    private void toggleInstall(Item item, Button btn, Label statusLabel) {
         item.installed = !item.installed;
         statusLabel.setText(item.installed ? "Installed" : "Not installed");
         setButtonGraphic(btn, item.installed);
