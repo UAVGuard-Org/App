@@ -5,7 +5,11 @@ import com.uavguard.plugin.Action;
 import com.uavguard.plugin.Movement;
 import com.uavguard.plugin.Plugin;
 import com.uavguard.utilities.Manager;
+import com.uavguard.utilities.Path;
 import com.uavguard.utilities.Socket;
+import java.io.ByteArrayInputStream;
+import java.net.*;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ComboBox;
@@ -16,12 +20,12 @@ import javafx.scene.layout.Pane;
 
 public class Home {
 
-    private Manager manager = new Manager();
+    private String ip;
     private Plugin plugin;
     private Action command;
-    private final Socket socket = new Socket();
-    private String ip;
     private volatile boolean running = true;
+    private Manager manager = new Manager();
+    private final Socket socket = new Socket();
 
     @FXML
     private HBox control;
@@ -38,18 +42,55 @@ public class Home {
     @FXML
     public void initialize() {
         try {
+            DatagramSocket socket = new DatagramSocket(
+                new InetSocketAddress(ip, plugin.getVideo().getPort())
+            );
+
+            try {
+                plugin.getVideo().getSetup(socket);
+                plugin
+                    .getVideo()
+                    .setCallback((byte[] frame) -> {
+                        Platform.runLater(() -> {
+                            Image img = new Image(
+                                new ByteArrayInputStream(frame)
+                            );
+                            cameraView.setImage(img);
+                        });
+                    });
+            } catch (Exception e) {}
+
+            new Thread(() -> {
+                while (running) {
+                    try {
+                        byte[] buffer = new byte[4096];
+                        DatagramPacket packet = new DatagramPacket(
+                            buffer,
+                            buffer.length
+                        );
+                        socket.receive(packet);
+
+                        byte[] data = new byte[packet.getLength()];
+                        System.arraycopy(
+                            packet.getData(),
+                            0,
+                            data,
+                            0,
+                            packet.getLength()
+                        );
+
+                        plugin.getVideo().getLoop(socket, data);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            })
+                .start();
+
+            Path.checkPaths();
             ip = Socket.getGatewayAddress();
 
-            manager.load("/home/hasbulla/Documents/UAVGuard/plugins");
-            plugin = manager.plugins.get(0);
-            command = plugin.getCommand().getActions()[0];
-            for (Plugin p : manager.plugins) {
-                modelSelect.getItems().add(p.getName());
-            }
-
-            for (Action c : plugin.getCommand().getActions()) {
-                commandSelect.getItems().add(c.getName());
-            }
+            loadPlugins();
 
             Pane left_joystick = FXMLLoader.load(
                 getClass().getResource("view/joystick.xml")
@@ -60,29 +101,37 @@ public class Home {
 
             left_joystick.setOnMouseDragged(e -> {
                 Joystick.onMouseDragged(e, (x, y) -> {
-                    plugin.getCommand().setParameter(Movement.YAW, x);
-                    plugin.getCommand().setParameter(Movement.THROTTLE, -y);
+                    if (plugin != null) {
+                        plugin.getCommand().setParameter(Movement.YAW, x);
+                        plugin.getCommand().setParameter(Movement.THROTTLE, -y);
+                    }
                 });
             });
 
             left_joystick.setOnMouseReleased(e -> {
                 Joystick.onMouseReleased(e, () -> {
-                    plugin.getCommand().setParameter(Movement.THROTTLE, 0);
-                    plugin.getCommand().setParameter(Movement.YAW, 0);
+                    if (plugin != null) {
+                        plugin.getCommand().setParameter(Movement.THROTTLE, 0);
+                        plugin.getCommand().setParameter(Movement.YAW, 0);
+                    }
                 });
             });
 
             right_joystick.setOnMouseDragged(e -> {
                 Joystick.onMouseDragged(e, (x, y) -> {
-                    plugin.getCommand().setParameter(Movement.ROLL, x);
-                    plugin.getCommand().setParameter(Movement.PITCH, -y);
+                    if (plugin != null) {
+                        plugin.getCommand().setParameter(Movement.ROLL, x);
+                        plugin.getCommand().setParameter(Movement.PITCH, -y);
+                    }
                 });
             });
 
             right_joystick.setOnMouseReleased(e -> {
                 Joystick.onMouseReleased(e, () -> {
-                    plugin.getCommand().setParameter(Movement.PITCH, 0);
-                    plugin.getCommand().setParameter(Movement.ROLL, 0);
+                    if (plugin != null) {
+                        plugin.getCommand().setParameter(Movement.PITCH, 0);
+                        plugin.getCommand().setParameter(Movement.ROLL, 0);
+                    }
                 });
             });
 
@@ -95,9 +144,15 @@ public class Home {
         new Thread(() -> {
             while (running) {
                 try {
-                    byte[] pkt = plugin.getCommand().getPacket();
-                    socket.sendPacket(pkt, ip, plugin.getCommand().getPort());
-                    Thread.sleep(50);
+                    if (plugin != null) {
+                        byte[] pkt = plugin.getCommand().getPacket();
+                        socket.sendPacket(
+                            pkt,
+                            ip,
+                            plugin.getCommand().getPort()
+                        );
+                        Thread.sleep(50);
+                    }
                 } catch (Exception err) {
                     err.printStackTrace();
                 }
@@ -145,9 +200,11 @@ public class Home {
     @FXML
     public void onCommandSelect() {
         String selected = commandSelect.getValue();
-        for (Action c : plugin.getCommand().getActions()) {
-            if (c.getName().equals(selected)) {
-                this.command = c;
+        if (plugin != null) {
+            for (Action c : plugin.getCommand().getActions()) {
+                if (c.getName().equals(selected)) {
+                    this.command = c;
+                }
             }
         }
     }
@@ -155,10 +212,27 @@ public class Home {
     @FXML
     public void onSendCommand() {
         try {
-            byte[] pkt = command.getPacket();
-            socket.sendPacket(pkt, ip, plugin.getCommand().getPort());
+            if (plugin != null) {
+                byte[] pkt = command.getPacket();
+                socket.sendPacket(pkt, ip, plugin.getCommand().getPort());
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void loadPlugins() throws Exception {
+        manager.load(Path.getAppData() + "/plugins");
+        if (!manager.plugins.isEmpty()) {
+            plugin = manager.plugins.get(0);
+            command = plugin.getCommand().getActions()[0];
+            for (Plugin p : manager.plugins) {
+                modelSelect.getItems().add(p.getName());
+            }
+
+            for (Action c : plugin.getCommand().getActions()) {
+                commandSelect.getItems().add(c.getName());
+            }
         }
     }
 }

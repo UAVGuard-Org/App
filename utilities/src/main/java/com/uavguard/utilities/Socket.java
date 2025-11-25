@@ -30,4 +30,6 @@ public class Socket {
 
         return reader.readLine().trim().split("\\s+")[2];
     }
+
+    public static void getClient() {}
 }

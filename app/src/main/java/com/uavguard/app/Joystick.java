@@ -1,6 +1,5 @@
 package com.uavguard.app;
 
-import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;

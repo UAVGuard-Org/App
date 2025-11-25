@@ -19,21 +19,7 @@
 >
     <content>
         <VBox fx:id="configs">
-            <VBox fx:id="path">
-                <Label text="Set folder to scan plugins" />
-                <HBox>
-                    <TextField
-                        fx:id="pathField"
-                        editable="false"
-                        onMouseClicked="#onMouseClicked"
-                    />
-                    <Button>
-                        <graphic>
-                            <fx:include source="../icons/save.xml" />
-                        </graphic>
-                    </Button>
-                </HBox>
-            </VBox>
+
         </VBox>
     </content>
 </ScrollPane>

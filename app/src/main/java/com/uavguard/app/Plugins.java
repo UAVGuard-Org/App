@@ -91,17 +91,14 @@ public class Plugins {
         Label modelLabel = (Label) rowModel.getChildren().get(0);
         modelLabel.setText(itemData.model);
 
-        // version label
         HBox rowVersion = (HBox) item.getChildren().get(1);
         Label versionLabel = (Label) rowVersion.getChildren().get(0);
         versionLabel.setText(itemData.version);
 
-        // status label
         HBox rowStatus = (HBox) item.getChildren().get(2);
         Label statusLabel = (Label) rowStatus.getChildren().get(0);
         statusLabel.setText(itemData.installed ? "Installed" : "Not installed");
 
-        // button
         HBox rowButton = (HBox) item.getChildren().get(3);
         Button btn = (Button) rowButton.getChildren().get(0);
 
