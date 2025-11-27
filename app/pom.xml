@@ -38,6 +38,9 @@
             <groupId>com.uavguard.sdk</groupId>
             <artifactId>sdk</artifactId>
             <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath
+            >/home/hasbulla/Documents/UAVGuard/Sdk/target/sdk-1.0.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
