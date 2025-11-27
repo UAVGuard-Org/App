@@ -1,16 +1,19 @@
 package com.uavguard.app;
 
+import com.uavguard.utilities.Status;
+
 public class Item {
 
-    public String model;
+    public String name;
     public String version;
-    public boolean installed;
+    public String link;
+    public Status status;
 
     public Item() {}
 
-    public Item(String model, String version, boolean installed) {
-        this.model = model;
+    public Item(String name, String version, String link, Status status) {
+        this.name = name;
         this.version = version;
-        this.installed = installed;
+        this.link = link;
     }
 }

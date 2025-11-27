@@ -2,10 +2,18 @@ package com.uavguard.app;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.uavguard.plugin.Plugin;
+import com.uavguard.utilities.Manager;
+import com.uavguard.utilities.Path;
+import com.uavguard.utilities.Status;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,6 +26,8 @@ import javafx.scene.layout.VBox;
 
 public class Plugins {
 
+    private Manager manager = new Manager();
+
     @FXML
     private VBox result;
 
@@ -26,12 +36,18 @@ public class Plugins {
 
     @FXML
     public void initialize() {
-        loadItems();
+        try {
+            loadPlugins();
+            loadItems();
+        } catch (Exception ignored) {}
     }
 
     @FXML
     private void onReload() {
-        loadItems();
+        try {
+            loadPlugins();
+            loadItems();
+        } catch (Exception ignored) {}
     }
 
     @FXML
@@ -41,7 +57,7 @@ public class Plugins {
             List<Item> items = Request();
             for (Item itemData : items) {
                 if (
-                    itemData.model
+                    itemData.name
                         .toLowerCase()
                         .contains(input.getText().toLowerCase())
                 ) {
@@ -70,15 +86,24 @@ public class Plugins {
         return items;
     }
 
-    private void loadItems() {
+    private void loadItems() throws Exception {
         result.getChildren().clear();
-        try {
-            List<Item> items = Request();
-            for (Item itemData : items) {
-                result.getChildren().add(createItem(itemData));
+        List<Item> items = Request();
+
+        for (Item itemData : items) {
+            itemData.status = Status.Download;
+
+            for (Plugin p : manager.plugins) {
+                if (p.getName().equals(itemData.name)) {
+                    if (p.getVersion().equals(itemData.version)) {
+                        itemData.status = Status.Remove;
+                    } else {
+                        itemData.status = Status.Update;
+                    }
+                }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            result.getChildren().add(createItem(itemData));
         }
     }
 
@@ -87,45 +112,107 @@ public class Plugins {
             getClass().getResource("view/item.xml")
         );
 
-        HBox rowModel = (HBox) item.getChildren().get(0);
-        Label modelLabel = (Label) rowModel.getChildren().get(0);
-        modelLabel.setText(itemData.model);
+        Label modelLabel = (Label) ((HBox) item
+                .getChildren()
+                .get(0)).getChildren().get(0);
+        modelLabel.setText(itemData.name);
 
-        HBox rowVersion = (HBox) item.getChildren().get(1);
-        Label versionLabel = (Label) rowVersion.getChildren().get(0);
+        Label versionLabel = (Label) ((HBox) item
+                .getChildren()
+                .get(1)).getChildren().get(0);
         versionLabel.setText(itemData.version);
 
-        HBox rowStatus = (HBox) item.getChildren().get(2);
-        Label statusLabel = (Label) rowStatus.getChildren().get(0);
-        statusLabel.setText(itemData.installed ? "Installed" : "Not installed");
+        Label statusLabel = (Label) ((HBox) item
+                .getChildren()
+                .get(2)).getChildren().get(0);
+        statusLabel.setText(itemData.status.toString());
 
-        HBox rowButton = (HBox) item.getChildren().get(3);
-        Button btn = (Button) rowButton.getChildren().get(0);
+        Button btn = (Button) ((HBox) item
+                .getChildren()
+                .get(3)).getChildren().get(0);
+        setButtonGraphic(btn, itemData.status);
 
-        setButtonGraphic(btn, itemData.installed);
-
-        btn.setOnAction(e -> {
-            toggleInstall(itemData, btn, statusLabel);
-        });
-
+        btn.setOnAction(e -> pluginAction(itemData, btn, statusLabel));
         return item;
     }
 
-    private void setButtonGraphic(Button btn, boolean installed) {
+    private void setButtonGraphic(Button btn, Status status) {
+        String path = "";
+
         try {
-            String path = installed ? "icons/remove.xml" : "icons/install.xml";
+            switch (status) {
+                case Remove -> path = "icons/remove.xml";
+                case Update -> path = "icons/update.xml";
+                case Download -> path = "icons/download.xml";
+            }
+
             javafx.scene.Node graphic = FXMLLoader.load(
                 getClass().getResource(path)
             );
             btn.setGraphic(graphic);
         } catch (Exception e) {
-            btn.setText(installed ? "Remove" : "Install");
+            switch (status) {
+                case Remove -> btn.setText("Remove");
+                case Update -> btn.setText("Update");
+                case Download -> btn.setText("Download");
+            }
         }
     }
 
-    private void toggleInstall(Item item, Button btn, Label statusLabel) {
-        item.installed = !item.installed;
-        statusLabel.setText(item.installed ? "Installed" : "Not installed");
-        setButtonGraphic(btn, item.installed);
+    private void pluginAction(Item item, Button btn, Label statusLabel) {
+        try {
+            switch (item.status) {
+                case Download -> {
+                    downloadPlugin(item);
+                    statusLabel.setText("Remove");
+                    item.status = Status.Remove;
+                }
+                case Remove -> {
+                    removePlugin(item);
+                    statusLabel.setText("Download");
+                    item.status = Status.Download;
+                }
+                case Update -> {
+                    removePlugin(item);
+                    downloadPlugin(item);
+                    statusLabel.setText("Remove");
+                    item.status = Status.Remove;
+                }
+            }
+
+            setButtonGraphic(btn, item.status);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void downloadPlugin(Item item) throws Exception {
+        String pluginsDir = Path.getAppData() + "/plugins";
+
+        URL url = new URL(item.link);
+        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
+
+        FileOutputStream fos = new FileOutputStream(
+            pluginsDir + "/" + item.name + ".jar"
+        );
+
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        fos.close();
+        rbc.close();
+
+        manager.load(pluginsDir);
+    }
+
+    private void removePlugin(Item item) throws Exception {
+        String pluginsDir = Path.getAppData() + "/plugins";
+        File f = new File(pluginsDir + "/" + item.name + ".jar");
+
+        if (f.exists()) f.delete();
+
+        manager.load(pluginsDir);
+    }
+
+    private void loadPlugins() throws Exception {
+        manager.load(Path.getAppData() + "/plugins");
     }
 }
