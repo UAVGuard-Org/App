@@ -33,7 +33,7 @@
     </properties>
 
     <modules>
-        <module>plugin</module>
+        <module>sdk</module>
         <module>utilities</module>
         <module>app</module>
     </modules>

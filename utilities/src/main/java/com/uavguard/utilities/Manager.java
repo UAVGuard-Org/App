@@ -1,6 +1,6 @@
 package com.uavguard.utilities;
 
-import com.uavguard.plugin.Plugin;
+import com.uavguard.sdk.Plugin;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -26,10 +26,10 @@ public class Manager {
                 .getMainAttributes()
                 .getValue("Main-Class");
 
-            Plugin plugin = (Plugin) Class.forName(mainClassName, true, loader)
+            Plugin sdk = (Plugin) Class.forName(mainClassName, true, loader)
                 .getDeclaredConstructor()
                 .newInstance();
-            plugins.add(plugin);
+            plugins.add(sdk);
         }
     }
 }

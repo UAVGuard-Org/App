@@ -1,4 +1,4 @@
 module com.uavguard.utilities {
-    requires com.uavguard.plugin;
+    requires com.uavguard.sdk;
     exports com.uavguard.utilities;
 }

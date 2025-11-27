@@ -1,4 +1,4 @@
-package com.uavguard.plugin;
+package com.uavguard.sdk;
 
 public class Action {
 

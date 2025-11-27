@@ -35,8 +35,8 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>com.uavguard.plugin</groupId>
-            <artifactId>plugin</artifactId>
+            <groupId>com.uavguard.sdk</groupId>
+            <artifactId>sdk</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>

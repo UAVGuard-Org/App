@@ -5,11 +5,11 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd"
 >
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.uavguard.plugin</groupId>
-    <artifactId>plugin</artifactId>
+    <groupId>com.uavguard.sdk</groupId>
+    <artifactId>sdk</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>plugin</name>
+    <name>sdk</name>
     <parent>
         <groupId>com.uavguard</groupId>
         <artifactId>UAVGuard</artifactId>

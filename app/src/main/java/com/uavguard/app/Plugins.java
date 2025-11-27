@@ -2,7 +2,7 @@ package com.uavguard.app;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.uavguard.plugin.Plugin;
+import com.uavguard.sdk.Plugin;
 import com.uavguard.utilities.Manager;
 import com.uavguard.utilities.Path;
 import com.uavguard.utilities.Status;

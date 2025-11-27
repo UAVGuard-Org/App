@@ -1,7 +1,7 @@
-package com.uavguard.plugin;
+package com.uavguard.sdk;
 
-import com.uavguard.plugin.Action;
-import com.uavguard.plugin.Movement;
+import com.uavguard.sdk.Action;
+import com.uavguard.sdk.Movement;
 
 public interface Command {
     int getPort();

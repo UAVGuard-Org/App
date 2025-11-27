@@ -1,7 +1,7 @@
-package com.uavguard.plugin;
+package com.uavguard.sdk;
 
-import com.uavguard.plugin.Command;
-import com.uavguard.plugin.Video;
+import com.uavguard.sdk.Command;
+import com.uavguard.sdk.Video;
 
 public interface Plugin {
     String getName();

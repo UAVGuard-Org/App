@@ -1,4 +1,4 @@
-package com.uavguard.plugin;
+package com.uavguard.sdk;
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;

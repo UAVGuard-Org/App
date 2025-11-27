@@ -1,9 +1,9 @@
 package com.uavguard.app;
 
 import com.uavguard.app.Joystick;
-import com.uavguard.plugin.Action;
-import com.uavguard.plugin.Movement;
-import com.uavguard.plugin.Plugin;
+import com.uavguard.sdk.Action;
+import com.uavguard.sdk.Movement;
+import com.uavguard.sdk.Plugin;
 import com.uavguard.utilities.Manager;
 import com.uavguard.utilities.Path;
 import com.uavguard.utilities.Socket;
