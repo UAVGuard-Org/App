@@ -71,7 +71,7 @@ public class Plugins {
 
     private List<Item> Request() throws Exception {
         URL url = new URL(
-            "https://raw.githubusercontent.com/PSalleSDev/UAVGuard-Plugins/main/plugins.json"
+            "https://raw.githubusercontent.com/UAVGuard-Org/Plugins/refs/heads/main/plugins.json"
         );
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");

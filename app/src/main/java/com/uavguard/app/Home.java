@@ -10,6 +10,7 @@ import com.uavguard.utilities.Socket;
 import java.io.ByteArrayInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -73,7 +74,6 @@ public class Home {
             return;
         }
 
-        // Primeiro plugin da lista
         plugin = manager.plugins.get(0);
         ip = Socket.getGatewayAddress();
 
@@ -146,48 +146,50 @@ public class Home {
         if (p == null || p.getVideo() == null) return;
 
         try {
-            DatagramSocket videoSocket = new DatagramSocket(
-                new InetSocketAddress(ip, p.getVideo().getPort())
-            );
+            plugin
+                .getVideo()
+                .setCallback(frame ->
+                    Platform.runLater(() ->
+                        cameraView.setImage(
+                            new Image(new ByteArrayInputStream(frame))
+                        )
+                    )
+                );
 
-            try {
-                p.getVideo().getSetup(videoSocket);
-                p
-                    .getVideo()
-                    .setCallback((byte[] frame) -> {
-                        Platform.runLater(() -> {
-                            Image img = new Image(
-                                new ByteArrayInputStream(frame)
-                            );
-                            cameraView.setImage(img);
-                        });
-                    });
-            } catch (Exception ignored) {}
+            DatagramSocket socket = new DatagramSocket(
+                plugin.getVideo().getPort()
+            );
+            InetAddress ipAddr = InetAddress.getByName(ip);
+
+            plugin.getVideo().getSetup(socket, ipAddr);
 
             new Thread(() -> {
-                while (running) {
-                    try {
-                        byte[] buffer = new byte[4096];
-                        DatagramPacket packet = new DatagramPacket(
-                            buffer,
-                            buffer.length
-                        );
+                try {
+                    byte[] buffer = new byte[2048];
+                    DatagramPacket packet = new DatagramPacket(
+                        buffer,
+                        buffer.length
+                    );
 
-                        videoSocket.receive(packet);
+                    while (running) {
+                        socket.receive(packet);
 
-                        byte[] data = new byte[packet.getLength()];
+                        int length = packet.getLength();
+                        byte[] received = new byte[length];
                         System.arraycopy(
                             packet.getData(),
                             0,
-                            data,
+                            received,
                             0,
-                            packet.getLength()
+                            length
                         );
 
-                        p.getVideo().getLoop(videoSocket, data);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        plugin.getVideo().getLoop(socket, ipAddr, received);
                     }
+
+                    socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             })
                 .start();
