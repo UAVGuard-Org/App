@@ -6,7 +6,8 @@ import java.net.*;
 
 public class Network {
 
-    public void sendPacket(byte[] data, String ip, int port) throws Exception {
+    public static void sendPacket(byte[] data, String ip, int port)
+        throws Exception {
         DatagramSocket socket = new DatagramSocket();
         InetAddress addr = InetAddress.getByName(ip);
         DatagramPacket pkt = new DatagramPacket(data, data.length, addr, port);

@@ -32,7 +32,7 @@ public class Main {
         try {
             Node view = FXMLLoader.load(getClass().getResource(fxmlName));
             content.getChildren().setAll(view);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

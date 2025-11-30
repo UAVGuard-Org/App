@@ -7,9 +7,7 @@ import com.uavguard.utilities.Manager;
 import com.uavguard.utilities.Network;
 import com.uavguard.utilities.Path;
 import java.io.ByteArrayInputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.net.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,8 +25,6 @@ public class Home {
 
     private volatile boolean running = true;
 
-    private final Manager manager = new Manager();
-    private final Network socket = new Network();
     private Plugin[] plugins;
 
     @FXML
@@ -49,7 +45,7 @@ public class Home {
             Path.checkPaths();
 
             //Load plugins
-            plugins = manager.load(Path.getAppData() + "/plugins");
+            plugins = Manager.load(Path.getAppData() + "/plugins");
             modelSelect.getItems().clear();
             commandSelect.getItems().clear();
 
@@ -61,11 +57,6 @@ public class Home {
             for (Plugin p : plugins) {
                 modelSelect.getItems().add(p.getName());
             }
-
-            //Load commands
-            commandSelect.getItems().clear();
-
-            if (plugin == null || plugin.getCommand() == null) return;
 
             for (Action action : plugin.getCommand().getActions()) {
                 commandSelect.getItems().add(action.getName());
@@ -93,7 +84,20 @@ public class Home {
                     try {
                         if (plugin != null) {
                             byte[] pkt = plugin.getCommand().getPacket();
-                            socket.sendPacket(
+                            System.out.print("Bytes: ");
+                            for (byte b : pkt) {
+                                System.out.printf("%02X ", b);
+                            }
+                            System.out.println();
+
+                            // imprime IP e porta destino
+                            System.out.println(
+                                "Para: " +
+                                    ip +
+                                    ":" +
+                                    plugin.getCommand().getPort()
+                            );
+                            Network.sendPacket(
                                 pkt,
                                 ip,
                                 plugin.getCommand().getPort()
@@ -118,12 +122,12 @@ public class Home {
                     )
                 );
 
-            DatagramSocket socket = new DatagramSocket(
+            DatagramNetwork Network = new DatagramNetwork(
                 plugin.getVideo().getPort()
             );
             InetAddress ipAddr = InetAddress.getByName(ip);
 
-            plugin.getVideo().setup(socket, ipAddr);
+            plugin.getVideo().setup(Network, ipAddr);
 
             new Thread(() -> {
                 try {
@@ -134,7 +138,7 @@ public class Home {
                     );
 
                     while (running) {
-                        socket.receive(packet);
+                        Network.receive(packet);
 
                         int length = packet.getLength();
                         byte[] received = new byte[length];
@@ -146,10 +150,10 @@ public class Home {
                             length
                         );
 
-                        plugin.getVideo().loop(socket, ipAddr, received);
+                        plugin.getVideo().loop(Network, ipAddr, received);
                     }
 
-                    socket.close();
+                    Network.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -216,7 +220,7 @@ public class Home {
         String selected = commandSelect.getValue();
         for (Action c : plugin.getCommand().getActions()) {
             if (c.getName().equals(selected)) {
-                this.command = c;
+                command = c;
             }
         }
     }
@@ -227,7 +231,7 @@ public class Home {
             if (plugin == null || command == null) return;
 
             byte[] pkt = command.getPacket();
-            socket.sendPacket(pkt, ip, plugin.getCommand().getPort());
+            Network.sendPacket(pkt, ip, plugin.getCommand().getPort());
         } catch (Exception e) {
             e.printStackTrace();
         }
