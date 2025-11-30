@@ -122,12 +122,12 @@ public class Home {
                     )
                 );
 
-            DatagramNetwork Network = new DatagramNetwork(
+            DatagramSocket socket = new DatagramSocket(
                 plugin.getVideo().getPort()
             );
             InetAddress ipAddr = InetAddress.getByName(ip);
 
-            plugin.getVideo().setup(Network, ipAddr);
+            plugin.getVideo().setup(socket, ipAddr);
 
             new Thread(() -> {
                 try {
@@ -138,7 +138,7 @@ public class Home {
                     );
 
                     while (running) {
-                        Network.receive(packet);
+                        socket.receive(packet);
 
                         int length = packet.getLength();
                         byte[] received = new byte[length];
@@ -150,10 +150,10 @@ public class Home {
                             length
                         );
 
-                        plugin.getVideo().loop(Network, ipAddr, received);
+                        plugin.getVideo().loop(socket, ipAddr, received);
                     }
 
-                    Network.close();
+                    socket.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
