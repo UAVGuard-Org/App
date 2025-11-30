@@ -26,14 +26,9 @@
     <!-- Barra de pesquisa -->
     <HBox fx:id="search" alignment="CENTER" GridPane.rowIndex="0">
         <TextField fx:id="input" promptText="Search for UAV models..." />
-        <Button onAction="#onSearch">
-            <graphic>
-                 <fx:include source="../icons/search.xml" />
-            </graphic>
-        </Button>
         <Button onAction="#onReload">
             <graphic>
-                 <fx:include source="../icons/reload.xml" />
+                 <fx:include source="../icons/search.xml" />
             </graphic>
         </Button>
     </HBox>

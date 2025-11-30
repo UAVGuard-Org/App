@@ -1,6 +1,4 @@
-package com.uavguard.app;
-
-import com.uavguard.utilities.Status;
+package com.uavguard.utilities;
 
 public class Item {
 

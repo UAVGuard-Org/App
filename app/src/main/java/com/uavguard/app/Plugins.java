@@ -1,20 +1,18 @@
 package com.uavguard.app;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.uavguard.sdk.Plugin;
+import com.uavguard.utilities.Item;
 import com.uavguard.utilities.Manager;
 import com.uavguard.utilities.Path;
 import com.uavguard.utilities.Status;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.List;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
@@ -27,6 +25,7 @@ import javafx.scene.layout.VBox;
 public class Plugins {
 
     private Manager manager = new Manager();
+    private Plugin[] plugins;
 
     @FXML
     private VBox result;
@@ -37,7 +36,7 @@ public class Plugins {
     @FXML
     public void initialize() {
         try {
-            loadPlugins();
+            plugins = manager.load(Path.getAppData() + "/plugins");
             loadItems();
         } catch (Exception ignored) {}
     }
@@ -45,31 +44,14 @@ public class Plugins {
     @FXML
     private void onReload() {
         try {
-            loadPlugins();
+            plugins = manager.load(Path.getAppData() + "/plugins");
             loadItems();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {}
     }
 
-    @FXML
-    private void onSearch() {
+    private void loadItems() throws Exception {
         result.getChildren().clear();
-        try {
-            List<Item> items = Request();
-            for (Item itemData : items) {
-                if (
-                    itemData.name
-                        .toLowerCase()
-                        .contains(input.getText().toLowerCase())
-                ) {
-                    result.getChildren().add(createItem(itemData));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
-    private List<Item> Request() throws Exception {
         URL url = new URL(
             "https://raw.githubusercontent.com/UAVGuard-Org/Plugins/refs/heads/main/plugins.json"
         );
@@ -77,23 +59,16 @@ public class Plugins {
         conn.setRequestMethod("GET");
 
         InputStreamReader reader = new InputStreamReader(conn.getInputStream());
-        Type listType = new TypeToken<List<Item>>() {}.getType();
 
-        List<Item> items = new Gson().fromJson(reader, listType);
+        Item[] items = new Gson().fromJson(reader, Item[].class);
 
         reader.close();
         conn.disconnect();
-        return items;
-    }
-
-    private void loadItems() throws Exception {
-        result.getChildren().clear();
-        List<Item> items = Request();
 
         for (Item itemData : items) {
             itemData.status = Status.Download;
 
-            for (Plugin p : manager.plugins) {
+            for (Plugin p : plugins) {
                 if (p.getName().equals(itemData.name)) {
                     if (p.getVersion().equals(itemData.version)) {
                         itemData.status = Status.Remove;
@@ -103,37 +78,34 @@ public class Plugins {
                 }
             }
 
-            result.getChildren().add(createItem(itemData));
+            GridPane item = FXMLLoader.load(
+                getClass().getResource("view/item.xml")
+            );
+
+            Label modelLabel = (Label) ((HBox) item
+                    .getChildren()
+                    .get(0)).getChildren().get(0);
+            modelLabel.setText(itemData.name);
+
+            Label versionLabel = (Label) ((HBox) item
+                    .getChildren()
+                    .get(1)).getChildren().get(0);
+            versionLabel.setText(itemData.version);
+
+            Label statusLabel = (Label) ((HBox) item
+                    .getChildren()
+                    .get(2)).getChildren().get(0);
+            statusLabel.setText(itemData.status.toString());
+
+            Button btn = (Button) ((HBox) item
+                    .getChildren()
+                    .get(3)).getChildren().get(0);
+            setButtonGraphic(btn, itemData.status);
+
+            btn.setOnAction(e -> pluginAction(itemData, btn, statusLabel));
+
+            result.getChildren().add(item);
         }
-    }
-
-    private GridPane createItem(Item itemData) throws Exception {
-        GridPane item = FXMLLoader.load(
-            getClass().getResource("view/item.xml")
-        );
-
-        Label modelLabel = (Label) ((HBox) item
-                .getChildren()
-                .get(0)).getChildren().get(0);
-        modelLabel.setText(itemData.name);
-
-        Label versionLabel = (Label) ((HBox) item
-                .getChildren()
-                .get(1)).getChildren().get(0);
-        versionLabel.setText(itemData.version);
-
-        Label statusLabel = (Label) ((HBox) item
-                .getChildren()
-                .get(2)).getChildren().get(0);
-        statusLabel.setText(itemData.status.toString());
-
-        Button btn = (Button) ((HBox) item
-                .getChildren()
-                .get(3)).getChildren().get(0);
-        setButtonGraphic(btn, itemData.status);
-
-        btn.setOnAction(e -> pluginAction(itemData, btn, statusLabel));
-        return item;
     }
 
     private void setButtonGraphic(Button btn, Status status) {
@@ -210,9 +182,5 @@ public class Plugins {
         if (f.exists()) f.delete();
 
         manager.load(pluginsDir);
-    }
-
-    private void loadPlugins() throws Exception {
-        manager.load(Path.getAppData() + "/plugins");
     }
 }

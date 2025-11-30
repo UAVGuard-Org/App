@@ -24,7 +24,6 @@ public class Configs {
 
     @FXML
     public void onMouseClicked() {
-        // obtém o Stage a partir do root (funciona mesmo sem referência ao Main)
         Stage stage = (Stage) root.getScene().getWindow();
 
         File selectedDirectory = directoryChooser.showDialog(stage);

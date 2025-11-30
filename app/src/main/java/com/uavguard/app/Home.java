@@ -1,17 +1,15 @@
 package com.uavguard.app;
 
-import com.uavguard.app.Joystick;
 import com.uavguard.sdk.Action;
 import com.uavguard.sdk.Movement;
 import com.uavguard.sdk.Plugin;
 import com.uavguard.utilities.Manager;
+import com.uavguard.utilities.Network;
 import com.uavguard.utilities.Path;
-import com.uavguard.utilities.Socket;
 import java.io.ByteArrayInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,7 +28,8 @@ public class Home {
     private volatile boolean running = true;
 
     private final Manager manager = new Manager();
-    private final Socket socket = new Socket();
+    private final Network socket = new Network();
+    private Plugin[] plugins;
 
     @FXML
     private HBox control;
@@ -48,104 +47,67 @@ public class Home {
     public void initialize() {
         try {
             Path.checkPaths();
-            loadPlugins();
-            configureUI();
-            startCommandSender();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        control
-            .sceneProperty()
-            .addListener((obs, oldScene, newScene) -> {
-                if (oldScene != null && newScene == null) {
-                    running = false;
+            //Load plugins
+            plugins = manager.load(Path.getAppData() + "/plugins");
+            modelSelect.getItems().clear();
+            commandSelect.getItems().clear();
+
+            if (plugins.length == 0) return;
+
+            plugin = plugins[0];
+            ip = Network.getGatewayAddress();
+
+            for (Plugin p : plugins) {
+                modelSelect.getItems().add(p.getName());
+            }
+
+            //Load commands
+            commandSelect.getItems().clear();
+
+            if (plugin == null || plugin.getCommand() == null) return;
+
+            for (Action action : plugin.getCommand().getActions()) {
+                commandSelect.getItems().add(action.getName());
+            }
+
+            command = plugin.getCommand().getActions()[0];
+
+            //Set joysticks
+            Pane left = FXMLLoader.load(
+                getClass().getResource("view/joystick.xml")
+            );
+            Pane right = FXMLLoader.load(
+                getClass().getResource("view/joystick.xml")
+            );
+
+            setupJoystick(left, true);
+            setupJoystick(right, false);
+
+            control.getChildren().add(left);
+            control.getChildren().add(right);
+
+            //Command sender
+            new Thread(() -> {
+                while (running) {
+                    try {
+                        if (plugin != null) {
+                            byte[] pkt = plugin.getCommand().getPacket();
+                            socket.sendPacket(
+                                pkt,
+                                ip,
+                                plugin.getCommand().getPort()
+                            );
+                        }
+                        Thread.sleep(50);
+                    } catch (Exception err) {
+                        err.printStackTrace();
+                    }
                 }
-            });
-    }
+            })
+                .start();
 
-    private void loadPlugins() throws Exception {
-        manager.load(Path.getAppData() + "/plugins");
-        modelSelect.getItems().clear();
-        commandSelect.getItems().clear();
-
-        if (manager.plugins.isEmpty()) {
-            plugin = null;
-            return;
-        }
-
-        plugin = manager.plugins.get(0);
-        ip = Socket.getGatewayAddress();
-
-        for (Plugin p : manager.plugins) {
-            modelSelect.getItems().add(p.getName());
-        }
-
-        loadCommandsFor(plugin);
-        setupVideoReceiver(plugin);
-    }
-
-    private void loadCommandsFor(Plugin p) {
-        commandSelect.getItems().clear();
-
-        if (p == null || p.getCommand() == null) return;
-
-        for (Action action : p.getCommand().getActions()) {
-            commandSelect.getItems().add(action.getName());
-        }
-
-        command = p.getCommand().getActions()[0];
-    }
-
-    private void configureUI() throws Exception {
-        Pane left = FXMLLoader.load(
-            getClass().getResource("view/joystick.xml")
-        );
-        Pane right = FXMLLoader.load(
-            getClass().getResource("view/joystick.xml")
-        );
-
-        setupJoystick(left, true);
-        setupJoystick(right, false);
-
-        control.getChildren().add(left);
-        control.getChildren().add(right);
-    }
-
-    private void setupJoystick(Pane joystick, boolean isLeft) {
-        joystick.setOnMouseDragged(e -> {
-            if (plugin == null) return;
-
-            Joystick.onMouseDragged(e, (x, y) -> {
-                if (isLeft) {
-                    plugin.getCommand().setParameter(Movement.YAW, x);
-                    plugin.getCommand().setParameter(Movement.THROTTLE, -y);
-                } else {
-                    plugin.getCommand().setParameter(Movement.ROLL, x);
-                    plugin.getCommand().setParameter(Movement.PITCH, -y);
-                }
-            });
-        });
-
-        joystick.setOnMouseReleased(e -> {
-            if (plugin == null) return;
-
-            Joystick.onMouseReleased(e, () -> {
-                if (isLeft) {
-                    plugin.getCommand().setParameter(Movement.THROTTLE, 0);
-                    plugin.getCommand().setParameter(Movement.YAW, 0);
-                } else {
-                    plugin.getCommand().setParameter(Movement.PITCH, 0);
-                    plugin.getCommand().setParameter(Movement.ROLL, 0);
-                }
-            });
-        });
-    }
-
-    private void setupVideoReceiver(Plugin p) {
-        if (p == null || p.getVideo() == null) return;
-
-        try {
+            //Video reciver
             plugin
                 .getVideo()
                 .setCallback(frame ->
@@ -161,7 +123,7 @@ public class Home {
             );
             InetAddress ipAddr = InetAddress.getByName(ip);
 
-            plugin.getVideo().getSetup(socket, ipAddr);
+            plugin.getVideo().setup(socket, ipAddr);
 
             new Thread(() -> {
                 try {
@@ -184,7 +146,7 @@ public class Home {
                             length
                         );
 
-                        plugin.getVideo().getLoop(socket, ipAddr, received);
+                        plugin.getVideo().loop(socket, ipAddr, received);
                     }
 
                     socket.close();
@@ -196,41 +158,52 @@ public class Home {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        control
+            .sceneProperty()
+            .addListener((obs, oldScene, newScene) -> {
+                if (oldScene != null && newScene == null) {
+                    running = false;
+                }
+            });
     }
 
-    private void startCommandSender() {
-        new Thread(() -> {
-            while (running) {
-                try {
-                    if (plugin != null) {
-                        byte[] pkt = plugin.getCommand().getPacket();
-                        socket.sendPacket(
-                            pkt,
-                            ip,
-                            plugin.getCommand().getPort()
-                        );
-                    }
-                    Thread.sleep(50);
-                } catch (Exception err) {
-                    err.printStackTrace();
+    private void setupJoystick(Pane joystick, boolean isLeft) {
+        joystick.setOnMouseDragged(e -> {
+            Joystick.onMouseDragged(e, (x, y) -> {
+                if (isLeft) {
+                    plugin.getCommand().setParameter(Movement.YAW, x);
+                    plugin.getCommand().setParameter(Movement.THROTTLE, -y);
+                } else {
+                    plugin.getCommand().setParameter(Movement.ROLL, x);
+                    plugin.getCommand().setParameter(Movement.PITCH, -y);
                 }
-            }
-        })
-            .start();
+            });
+        });
+
+        joystick.setOnMouseReleased(e -> {
+            Joystick.onMouseReleased(e, () -> {
+                if (isLeft) {
+                    plugin.getCommand().setParameter(Movement.THROTTLE, 0);
+                    plugin.getCommand().setParameter(Movement.YAW, 0);
+                } else {
+                    plugin.getCommand().setParameter(Movement.PITCH, 0);
+                    plugin.getCommand().setParameter(Movement.ROLL, 0);
+                }
+            });
+        });
     }
 
     @FXML
     public void onModelSelect() {
         String selected = modelSelect.getValue();
 
-        for (Plugin p : manager.plugins) {
+        for (Plugin p : plugins) {
             if (p.getName().equals(selected)) {
                 plugin = p;
                 try {
-                    ip = Socket.getGatewayAddress();
+                    ip = Network.getGatewayAddress();
                 } catch (Exception e) {}
-                loadCommandsFor(p);
-                setupVideoReceiver(p);
                 break;
             }
         }

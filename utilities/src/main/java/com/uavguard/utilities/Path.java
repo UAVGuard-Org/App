@@ -8,9 +8,7 @@ public class Path {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {
-            return "";
-        } else if (os.contains("mac")) {
-            return "";
+            return System.getProperty("user.home") + "/AppData/Local/UAVGuard/";
         } else if (
             os.contains("nix") || os.contains("nux") || os.contains("aix")
         ) {
@@ -18,6 +16,12 @@ public class Path {
         } else {
             return "";
         }
+
+        /*
+        else if (os.contains("mac")) {
+            return "";
+        }
+        */
     }
 
     public static void checkPaths() {

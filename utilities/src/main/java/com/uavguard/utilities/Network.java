@@ -4,19 +4,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.*;
 
-public class Socket {
+public class Network {
 
     public void sendPacket(byte[] data, String ip, int port) throws Exception {
         DatagramSocket socket = new DatagramSocket();
         InetAddress addr = InetAddress.getByName(ip);
         DatagramPacket pkt = new DatagramPacket(data, data.length, addr, port);
         socket.send(pkt);
-        for (byte b : data) {
-            System.out.printf("%02X", b);
-        }
-
-        System.out.printf(" to " + ip);
-        System.out.println();
         socket.close();
     }
 
@@ -30,6 +24,4 @@ public class Socket {
 
         return reader.readLine().trim().split("\\s+")[2];
     }
-
-    public static void getClient() {}
 }
